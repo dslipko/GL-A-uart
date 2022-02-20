@@ -1,4 +1,4 @@
-
+#include <math.h>
 #include "driver/gpio.h"
 #include "driver/uart.h"
 #include "esp_log.h"
@@ -14,6 +14,13 @@ extern char* output;
 
 #define TXD_PIN (GPIO_NUM_17)
 #define RXD_PIN (GPIO_NUM_16)
+
+typedef struct{
+  uint16_t  start;
+  int16_t   cmd1;
+  int16_t   cmd2;
+  uint16_t  checksum;  
+} SerialData;
 
 void init(void) {
   const uart_config_t uart_config = {
@@ -41,10 +48,18 @@ int sendData(const char* logName, const char* data) {
 static void tx_task(void* arg) {
   static const char* TX_TASK_TAG = "TX_TASK";
   esp_log_level_set(TX_TASK_TAG, ESP_LOG_INFO);
+  SerialData data_struct;
+  data_struct.start = 0xABCD;
+  data_struct.cmd1 = 36;
+  data_struct.cmd2 = 100;
+  data_struct.checksum = pow(data_struct.start, data_struct.cmd1);
+  data_struct.checksum = pow(data_struct.checksum, data_struct.cmd2);
+  char * data = (char*)malloc(sizeof(SerialData));
+  memcpy(data, &data_struct, sizeof(SerialData));
+
+
   while (1) {
-    sendData(TX_TASK_TAG, " Test UART string  ");
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
-    sendData(TX_TASK_TAG, " Another test UART string  ");
+    sendData(TX_TASK_TAG, data);
     vTaskDelay(5000 / portTICK_PERIOD_MS);
   }
 }
@@ -52,7 +67,7 @@ static void tx_task(void* arg) {
 static void rx_task(void* arg) {
   static const char* RX_TASK_TAG = "RX_TASK";
   esp_log_level_set(RX_TASK_TAG, ESP_LOG_INFO);
-  char* data = (char*)malloc(RX_BUF_SIZE + 1);
+  char* data = (char*)malloc(sizeof(SerialData));
 
   while (1) {
     const int rxBytes =
