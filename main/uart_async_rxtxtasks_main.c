@@ -50,8 +50,8 @@ static void tx_task(void* arg) {
   esp_log_level_set(TX_TASK_TAG, ESP_LOG_INFO);
   SerialData data_struct;
   data_struct.start = 0xABCD;
-  data_struct.cmd1 = 36;
-  data_struct.cmd2 = 100;
+  data_struct.cmd1 = 40;
+  data_struct.cmd2 = 200;
   data_struct.checksum = pow(data_struct.start, data_struct.cmd1);
   data_struct.checksum = pow(data_struct.checksum, data_struct.cmd2);
   char * data = (char*)malloc(sizeof(SerialData));
